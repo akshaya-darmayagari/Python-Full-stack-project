@@ -1,4 +1,4 @@
-## 📰 Live News Aggreagator
+## 📰 Live News Aggregator
 
 This project is a news aggregator system that collects the latest headlines from multiple RSS feeds (e.g., The Hindu) and provides them to users in a structured and interactive way. The news is categorized into World, National, State,Entertainment(Movies), and Sports, making it easy for users to browse topics of interest.
 
