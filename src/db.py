@@ -31,3 +31,4 @@ def update_news(id, headline):
 # Delete news headline
 def delete_news(id):
     return supabase.table("news_articles").delete().eq("id", id).execute()
+
