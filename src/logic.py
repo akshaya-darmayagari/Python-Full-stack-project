@@ -1,58 +1,45 @@
-# src/logic.py
+from src.db import create_news, get_all_news, update_news, delete_news
+import feedparser
 
-from src.db import DatabaseManager
+THE_HINDU_FEEDS = {
+    "World": "https://www.thehindu.com/news/international/feeder/default.rss",
+    "National": "https://www.thehindu.com/news/national/feeder/default.rss",
+    "Telangana": "https://www.thehindu.com/news/national/telangana/feeder/default.rss",
+    "Entertainment": "https://www.thehindu.com/entertainment/feeder/default.rss",
+    "Sports": "https://www.thehindu.com/sport/feeder/default.rss"
+}
 
 class NewsAggregator:
-    """
-    Acts as a bridge between Frontend (Streamlit/FastAPI) and the database.
-    """
+    def fetch_rss_news(self, limit=10):
+        data = {}
+        for category, url in THE_HINDU_FEEDS.items():
+            parsed = feedparser.parse(url)
+            headlines = [(entry.title, entry.link) for entry in parsed.entries[:limit]]
+            data[category] = headlines
+        return data
 
-    def __init__(self):
-        # Create a database manager instance (this will handle db operations)
-        self.db = DatabaseManager()
+    def add_news(self, category, headline):
+        if not category or not headline:
+            return {"Success": False, "Message": "Category & Headline required"}
+        result = create_news(category, headline)
+        if "error" in result:
+            return {"Success": False, "Message": f"Error: {result['error']}"}
+        return {"Success": True, "Message": "News added successfully!"}
 
-    # --- Create ---
-    def add_news(self, category, headline, extracted_from_url):
-        """
-        Add a new news headline to the database.
-        Returns a success/error message.
-        """
-        if not extracted_from_url or not headline:
-            return {"Success": False, "Message": "URL & Headline are required"}
-        
-        # Call DB method to insert news
-        result = self.db.create_news(category, headline, extracted_from_url)
+    def get_news_db(self):
+        result = get_all_news()
+        if "error" in result:
+            return []
+        return result.data
 
-        if result.get("Success"):
-            return {"Success": True, "Message": "News added successfully!"}
-        else:
-            return {"Success": False, "Message": f"Error: {result.get('error')}"}
+    def update_news_db(self, id, headline, category):
+        result = update_news(id, headline, category)
+        if "error" in result:
+            return {"Success": False, "Message": f"Error: {result['error']}"}
+        return {"Success": True, "Message": "News updated successfully!"}
 
-    # --- Get news ---
-    def get_news(self):
-        """
-        Get all the news from the database.
-        """
-        return self.db.get_all_news()
-
-    # --- Update news ---
-    def mark_complete(self, id,headline):
-        """
-        Mark a news as updated.
-        """
-        result = self.db.update_news(id,headline)
-        if result.get("Success"):
-            return {"Success": True, "Message": "News updated successfully"}
-        return {"Success": False, "Message": f"Error: {result.get('error')}"}
-
-    # --- Delete news ---
-    def del_news(self, id):
-        """
-        Delete the news from the database.
-        """
-        result = self.db.delete_news(id)
-        if result.get("Success"):
-            return {"Success": True, "Message": "News deleted successfully"}
-        return {"Success": False, "Message": f"Error: {result.get('error')}"}
-
-
+    def delete_news_db(self, id):
+        result = delete_news(id)
+        if "error" in result:
+            return {"Success": False, "Message": f"Error: {result['error']}"}
+        return {"Success": True, "Message": "News deleted successfully!"}
